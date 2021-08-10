@@ -1,0 +1,13 @@
+#+TITLE: README
+
+WMController is a controller program that aims to replace Rofi, and do some other things that'll make it easier for me as I finally switch full-time to a window manager.
+
+This repo doesn't have anything promising yet. Right now, all it does is show a random rectangular box on the screen with another rectangle. Although, ideally, that's the hard part---override redirect (the magic that lets the window float apart from the rest of the WM as Rofi does) isn't very easy to enable, but the particular set of libraries I'm using makes this possible.
+
+* Features
++ Application launching support
++ Workspace/tag management support
++ Minimised window management
++ Volume/media management support
+
+  I really don't plan on WMController being particularly customizable. It'll be stubbornly opinionated to what I want.
