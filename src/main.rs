@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: Zlib */
+
 use glutin::{
     dpi::{PhysicalPosition, Position},
     event_loop::EventLoop,
