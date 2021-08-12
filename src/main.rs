@@ -13,7 +13,8 @@ use fontconfig::Fontconfig;
 
 use log::{debug, error, info, trace, warn};
 
-mod search;
+mod widgets;
+use widgets::search;
 
 fn main() {
     const WIDTH: u32 = 800;
@@ -86,7 +87,7 @@ fn main() {
     let fc = Fontconfig::new().unwrap();
     let font = fc
         .find("JetBrains Mono", None)
-        .expect("Failed to find the JetBrains Mono font!");
+        .expect("Failed to find font!");
     let mut glyph_cache = window
         // TODO We want to end up using some kind of font loader here
         // so we can specify the font family/name and it finds the tttf

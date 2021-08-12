@@ -47,18 +47,27 @@ impl Search {
 
         const SEARCH_FONTSIZE: f64 = RECT_HEIGHT / 2.0;
 
-        let text_xpos = coords[0] + 15.0;
-        // Not sure why, but subtracting 15% times this search_fontsize
-        // works consistently
-        let text_ypos =
-            coords[1] + (RECT_HEIGHT / 2.0) + (SEARCH_FONTSIZE / 2.0) - (0.15 * SEARCH_FONTSIZE);
-
         // The text to display/use to calculate cursor position
         let render_text = if self.events_run {
             &self.buffer
         } else {
             "Search"
         };
+
+        // I found that 'C' was the tallest of the characters, but that
+        // made the text not look vertically cenetered in a rectangle, so we
+        // want a slightly shorter character. We can use that to find the
+        // "max" (ish) height that our text will be… although this is still a hack.
+        let char_height = glyph_cache
+            .character(SEARCH_FONTSIZE as u32, 'A')
+            .expect("Failed to get max char height to vertically center text in the window!")
+            .top();
+
+        let text_xpos = coords[0] + 15.0;
+        // We use our character height from before to calculate where to put our text.
+        // The point we need is actually the bottom left of the text, so what we can do is
+        let text_ypos = coords[1] + (RECT_HEIGHT / 2.0) + (char_height / 2.0);
+
         text::Text::new_color([1.0, 1.0, 1.0, 1.0], SEARCH_FONTSIZE as u32)
             .draw(
                 render_text,
@@ -69,17 +78,19 @@ impl Search {
             )
             .unwrap();
 
+        // Loop through all the characters to find the width of all the text.
+        // This is for determining cursor height.
+        let mut cursor_offset = 0.0;
+        for ch in render_text.chars() {
+            let ch = glyph_cache
+                .character(SEARCH_FONTSIZE as u32, ch)
+                .expect("Failed to get size of character to display the cursor!");
+            cursor_offset += ch.advance_width();
+        }
+
         // Calculate the width of the text we're rendering so we know where to put the cursor.
         // We don't render the cursor until we start populating the buffer
         if self.events_run {
-            let mut cursor_offset = 0.0;
-            for ch in render_text.chars() {
-                let ch = glyph_cache
-                    .character(SEARCH_FONTSIZE as u32, ch)
-                    .expect("Failed to get size of character to display the cursor!");
-                cursor_offset += ch.advance_width();
-                debug!("char height {}", ch.top());
-            }
             line(
                 [1.0, 1.0, 1.0, 1.0],
                 1.0,
