@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: Zlib */
 
+use core::iter::FromIterator;
 use piston_window::*;
 
 use log::debug;
@@ -11,7 +12,7 @@ pub struct Search {
     // We want to display the placeholder "Search" text until the first keypress,
     // so we have this boolean to check whether or not to replace that placeholder.
     events_run: bool,
-    input_shift_enabled: bool,
+    ctrl_pressed: bool,
 }
 
 impl Search {
@@ -20,7 +21,7 @@ impl Search {
             buffer: "".to_string(),
             insert_mode: false,
             events_run: false,
-            input_shift_enabled: false,
+            ctrl_pressed: false,
         }
     }
 
@@ -31,6 +32,10 @@ impl Search {
     {
         const RECT_HEIGHT: f64 = 40.0;
 
+        // TODO we want to actually be able to set the width of the text box rectangle on the fly
+        // or as an argument to this draw function (we wouldn't want it to be a struct param)
+        // since we want people to be able to change details about the drawing independently
+        // of the state that is stored in this struct.
         Rectangle::new_border([1.0, 1.0, 1.0, 1.0], 1.0)
             .color([0.0, 0.0, 0.0, 0.0])
             .draw(
@@ -41,36 +46,130 @@ impl Search {
             );
 
         const SEARCH_FONTSIZE: f64 = RECT_HEIGHT / 2.0;
-        // TODO we want to actually calculate where the center of the box would be
+
+        let text_xpos = coords[0] + 15.0;
+        // Not sure why, but subtracting 15% times this search_fontsize
+        // works consistently
+        let text_ypos =
+            coords[1] + (RECT_HEIGHT / 2.0) + (SEARCH_FONTSIZE / 2.0) - (0.15 * SEARCH_FONTSIZE);
+
+        // The text to display/use to calculate cursor position
+        let render_text = if self.events_run {
+            &self.buffer
+        } else {
+            "Search"
+        };
         text::Text::new_color([1.0, 1.0, 1.0, 1.0], SEARCH_FONTSIZE as u32)
             .draw(
-                if self.events_run {
-                    &self.buffer
-                } else {
-                    "Search"
-                },
+                render_text,
                 glyph_cache,
                 &DrawState::default(),
-                c.transform.trans(
-                    coords[0] + 15.0,
-                    // Not sure why, but subtracting 6% times this search_fontsize
-                    // works consistently
-                    coords[1] + (RECT_HEIGHT / 2.0) + (SEARCH_FONTSIZE / 2.0)
-                        - ((3.0 / 20.0) * SEARCH_FONTSIZE),
-                ),
+                c.transform.trans(text_xpos, text_ypos),
                 g,
             )
             .unwrap();
+
+        // Calculate the width of the text we're rendering so we know where to put the cursor.
+        // We don't render the cursor until we start populating the buffer
+        if self.events_run {
+            let mut cursor_offset = 0.0;
+            for ch in render_text.chars() {
+                let ch = glyph_cache
+                    .character(SEARCH_FONTSIZE as u32, ch)
+                    .expect("Failed to get size of character to display the cursor!");
+                cursor_offset += ch.advance_width();
+                debug!("char height {}", ch.top());
+            }
+            line(
+                [1.0, 1.0, 1.0, 1.0],
+                1.0,
+                [
+                    // Add 5 pixels so we can have a nice comfortable gap
+                    // and the cursor isn't pressed up against the last character
+                    // in the buffer
+                    text_xpos + cursor_offset + 5.0,
+                    text_ypos - (SEARCH_FONTSIZE * 0.85),
+                    text_xpos + cursor_offset + 5.0,
+                    text_ypos + 2.0,
+                ],
+                c.transform,
+                g,
+            );
+        }
     }
 
     pub fn handle_event(&mut self, ev: &Event) {
         // We can get a string from the input very easily—no need to handle shift
         // and all those messy thiings
         if let Event::Input(inp, _) = ev {
-            if let Input::Text(add_string) = inp {
-                self.buffer += add_string;
-                self.events_run = true;
-                debug!("self.buffer is now {}", self.buffer);
+            match inp {
+                // We don't want to add the character to the text box if control is pressed,
+                // since we'll use Ctrl + key combinations for manipulating text in the text box.
+                Input::Text(add_string) if add_string != "" && !self.ctrl_pressed => {
+                    debug!("Add string is {}", add_string);
+                    self.buffer += add_string;
+                    self.events_run = true;
+                }
+
+                // This is for backspace (and ctrl-backspace since I'll implement that as well
+                // events.
+                Input::Button(ButtonArgs {
+                    button: Button::Keyboard(Key::Backspace),
+                    state: ButtonState::Press,
+                    ..
+                }) => {
+                    if !self.buffer.is_empty() {
+                        // We could probably consolidate this to get rid of the next_back twice
+                        // since both of these are double-ended iterators.
+
+                        // Use generics to save code. Both removals use a
+                        // DoubleEndedIterator, so we can captialize on that
+                        fn remove_last_iter_to_str<D>(mut de_iter: D) -> String
+                        where
+                            D: DoubleEndedIterator,
+                            String: FromIterator<<D as Iterator>::Item>,
+                        {
+                            de_iter.next_back();
+                            de_iter.collect()
+                        }
+                        self.buffer = if self.ctrl_pressed {
+                            // Take all the words except the last.                             let split_buffer =
+                            remove_last_iter_to_str(
+                                self.buffer
+                                    .split_whitespace()
+                                    .map(|word| word.to_owned() + " "),
+                            )
+                        } else {
+                            remove_last_iter_to_str(self.buffer.chars())
+                        }
+                    }
+                }
+                // We want to be able to manipulate the text in our buffer more easily
+                // This would do things like move cursor position and whatnot.
+                Input::Button(ButtonArgs {
+                    button: Button::Keyboard(key),
+                    state: ButtonState::Press,
+                    ..
+                }) if self.ctrl_pressed => match key {
+                    Key::K => self.buffer.clear(),
+                    _ => {}
+                },
+                // For control-backspace, which I absolutely cannot live without.
+                // We set ctrl_pressed so we can use it in conjunction with the backspace
+                // press to figure out when ctrl-backspace occurs.
+                Input::Button(ButtonArgs {
+                    button: Button::Keyboard(key),
+                    state,
+                    ..
+                }) if key == &Key::RCtrl || key == &Key::LCtrl => match state {
+                    ButtonState::Press => {
+                        self.ctrl_pressed = true;
+                    }
+                    ButtonState::Release => {
+                        self.ctrl_pressed = false;
+                    }
+                },
+                _ => {}
             }
         }
     }
