@@ -12,6 +12,8 @@ use winit::{
     window::WindowBuilder,
 };
 
+use fontconfig::Fontconfig;
+
 use log::{debug, error, info, trace, warn};
 
 fn main() {
@@ -79,10 +81,17 @@ fn main() {
 
     let opengl = OpenGL::from_api(api).unwrap();
     let mut window = PistonWindow::new(opengl, samples, gw);
+
+    // Find font for window—panic is fine here
+    // TODO let users specify their own font (or me if I want to change it)
+    let fc = Fontconfig::new().unwrap();
+    let font = fc
+        .find("JetBrains Mono", None)
+        .expect("Failed to find the JetBrains Mono font!");
     let mut glyph_cache = window
         // TODO We want to end up using some kind of font loader here
         // so we can specify the font family/name and it finds the tttf
-        .load_font("/usr/share/fonts/TTF/JetBrainsMono-Regular.ttf")
+        .load_font(font.path)
         .unwrap();
 
     while let Some(e) = window.next() {

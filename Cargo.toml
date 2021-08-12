@@ -6,9 +6,10 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-piston_window="*"
-pistoncore-glutin_window="*"
+piston_window = "*"
+pistoncore-glutin_window = "*"
 glutin = { version="0.26", features=["x11"]}
-winit="0.24.0"
+winit = "0.24.0"
 log = "0.4"
 flexi_logger = { version = "0.18", features = ["colors"] }
+fontconfig = "0.2.1"
