@@ -13,3 +13,4 @@ winit = "0.24.0"
 log = "0.4"
 flexi_logger = { version = "0.18", features = ["colors"] }
 fontconfig = "0.2.1"
+gfx_device_gl = "0.16.2"

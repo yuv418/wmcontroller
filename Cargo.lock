@@ -1783,6 +1783,7 @@ version = "0.1.0"
 dependencies = [
  "flexi_logger",
  "fontconfig",
+ "gfx_device_gl",
  "glutin",
  "log",
  "piston_window",

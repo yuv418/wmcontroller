@@ -1,9 +1,6 @@
 /* SPDX-License-Identifier: Zlib */
 
-use glutin::{
-    dpi::{PhysicalPosition, Position},
-    event_loop::EventLoop,
-};
+use glutin::dpi::{PhysicalPosition, Position};
 use glutin_window::GlutinWindow;
 use piston_window::*;
 use winit::{
@@ -16,6 +13,8 @@ use fontconfig::Fontconfig;
 
 use log::{debug, error, info, trace, warn};
 
+mod search;
+
 fn main() {
     const WIDTH: u32 = 800;
     const HEIGHT: u32 = 500;
@@ -24,7 +23,7 @@ fn main() {
         .start()
         .unwrap();
 
-    let eventloop = EventLoop::with_user_event();
+    let eventloop = glutin::event_loop::EventLoop::with_user_event();
     let window_builder = WindowBuilder::new()
         // This is the magic setting that lets the window float like how you see in rofi
         .with_override_redirect(true)
@@ -94,9 +93,17 @@ fn main() {
         .load_font(font.path)
         .unwrap();
 
-    while let Some(e) = window.next() {
-        if let Some(args) = e.render_args() {
-            window.draw_2d(&e, |c, g, device| {
+    let mut search = search::Search::new();
+
+    // let mut events = Events::new(EventSettings::new().lazy(true));
+
+    while let Some(ev) = window.next() {
+        // Event things go here
+        // We use press_args to store the key being pressed to pass it to the
+        // search bar
+        search.handle_event(&ev);
+        if let Some(args) = ev.render_args() {
+            window.draw_2d(&ev, |mut c, g, device| {
                 clear([0.0, 72.0 / 255.0, 71.0 / 255.0, 1.0], g);
                 text::Text::new_color([1.0, 1.0, 1.0, 1.0], 60)
                     .draw(
@@ -107,24 +114,9 @@ fn main() {
                         g,
                     )
                     .unwrap();
-                Rectangle::new_border([1.0, 1.0, 1.0, 1.0], 1.0)
-                    .color([0.0, 0.0, 0.0, 0.0])
-                    .draw(
-                        [40.0, 140.0, 700.0, 40.0],
-                        &Default::default(),
-                        c.transform,
-                        g,
-                    );
-                text::Text::new_color([1.0, 1.0, 1.0, 1.0], 20)
-                    .draw(
-                        "Search",
-                        &mut glyph_cache,
-                        &DrawState::default(),
-                        c.transform.trans(55.0, 167.0),
-                        g,
-                    )
-                    .unwrap();
-
+                search.draw([40.0, 140.0], &mut c, g, &mut glyph_cache);
+            });
+            window.draw_2d(&ev, |c, g, device| {
                 glyph_cache.factory.encoder.flush(device);
             });
         }
