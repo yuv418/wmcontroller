@@ -1,3 +1,6 @@
+/* SPDX-License-Identifier: Zlib */
+
+use crate::configuration::{BACKGROUND_COLOR, FOREGROUND_COLOR};
 use crate::widgets::Widget;
 use gfx_device_gl::Resources;
 use log::{debug, warn};
@@ -130,7 +133,7 @@ impl Widget for Select {
 
             // Draw line
             line(
-                [1.0, 1.0, 1.0, 1.0],
+                FOREGROUND_COLOR,
                 1.0,
                 [
                     // The line should span the entire stretch of the window.
@@ -148,7 +151,7 @@ impl Widget for Select {
             // selected entry. To invert the color of the entry, we use a rectangle.
             if index == self.selected_entry {
                 rectangle(
-                    [1.0, 1.0, 1.0, 1.0],
+                    FOREGROUND_COLOR,
                     [
                         coords[0],
                         // We have to subtract here since the line is the bottom
@@ -179,9 +182,9 @@ impl Widget for Select {
                     // We make the text the colour of the background when it's selected,
                     // since when it's selected, the entry will be white and white text
                     // on a white background won't be visible.
-                    [0.0, 72.0 / 255.0, 71.0 / 255.0, 1.0]
+                    BACKGROUND_COLOR
                 } else {
-                    [1.0, 1.0, 1.0, 1.0]
+                    FOREGROUND_COLOR
                 },
                 LISTING_FONTSIZE as u32,
             )

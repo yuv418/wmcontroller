@@ -1,5 +1,7 @@
 /* SPDX-License-Identifier: Zlib */
 
+// Technically I can just import FOREGROUND_COLOR from main.rs (root of crate), but I feel better about this.
+use crate::configuration::FOREGROUND_COLOR;
 use core::iter::FromIterator;
 use piston_window::*;
 
@@ -37,9 +39,10 @@ impl Widget for Search {
         // or as an argument to this draw function (we wouldn't want it to be a struct param)
         // since we want people to be able to change details about the drawing independently
         // of the state that is stored in this struct.
-        Rectangle::new_border([1.0, 1.0, 1.0, 1.0], 1.0)
+        Rectangle::new_border(FOREGROUND_COLOR, 1.0)
             .color([0.0, 0.0, 0.0, 0.0])
             .draw(
+                // TODO calculate RECT_WIDTH (700.0) from the window size.
                 [coords[0], coords[1], 700.0, RECT_HEIGHT],
                 &Default::default(),
                 c.transform,
@@ -69,7 +72,7 @@ impl Widget for Search {
         // The point we need is actually the bottom left of the text, so what we can do is
         let text_ypos = coords[1] + (RECT_HEIGHT / 2.0) + (char_height / 2.0);
 
-        text::Text::new_color([1.0, 1.0, 1.0, 1.0], SEARCH_FONTSIZE as u32)
+        text::Text::new_color(FOREGROUND_COLOR, SEARCH_FONTSIZE as u32)
             .draw(
                 render_text,
                 glyph_cache,
@@ -93,7 +96,7 @@ impl Widget for Search {
         // We don't render the cursor until we start populating the buffer
         if self.events_run {
             line(
-                [1.0, 1.0, 1.0, 1.0],
+                FOREGROUND_COLOR,
                 1.0,
                 [
                     // Add 5 pixels so we can have a nice comfortable gap

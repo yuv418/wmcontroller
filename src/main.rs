@@ -13,7 +13,10 @@ use fontconfig::Fontconfig;
 
 use log::{debug, error, info, trace, warn};
 
+mod configuration;
 mod widgets;
+
+use configuration::{BACKGROUND_COLOR, FONT_NAME, FOREGROUND_COLOR};
 use widgets::{search, select, Widget};
 
 fn main() {
@@ -85,9 +88,7 @@ fn main() {
     // Find font for window—panic is fine here
     // TODO let users specify their own font (or me if I want to change it)
     let fc = Fontconfig::new().unwrap();
-    let font = fc
-        .find("JetBrains Mono", None)
-        .expect("Failed to find font!");
+    let font = fc.find(FONT_NAME, None).expect("Failed to find font!");
     let mut glyph_cache = window
         // TODO We want to end up using some kind of font loader here
         // so we can specify the font family/name and it finds the tttf
@@ -118,8 +119,8 @@ fn main() {
             window.draw_2d(&ev, |mut c, g, device| {
                 // TODO we want to make all these colors configurable,
                 // or at least global.
-                clear([0.0, 72.0 / 255.0, 71.0 / 255.0, 1.0], g);
-                text::Text::new_color([1.0, 1.0, 1.0, 1.0], 60)
+                clear(BACKGROUND_COLOR, g);
+                text::Text::new_color(FOREGROUND_COLOR, 60)
                     .draw(
                         "Applications",
                         &mut glyph_cache,
