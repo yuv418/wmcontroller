@@ -1,9 +1,13 @@
 use crate::{configuration::FOREGROUND_COLOR, search::Search, select::Select, widgets::Widget};
 use dirs::home_dir;
-use freedesktop_desktop_entry::{DesktopEntry, Iter, PathSource};
+use freedesktop_desktop_entry::{default_paths, DesktopEntry, Iter, PathSource};
 use log::debug;
 use piston_window::*;
-use std::path::PathBuf;
+use regex::Regex;
+use std::ffi::CString;
+use std::os::unix::process::CommandExt;
+use std::process::Command;
+use std::{collections::HashMap, iter::IntoIterator, path::PathBuf};
 
 pub struct ApplicationLauncher {
     search: Search,
@@ -13,39 +17,29 @@ pub struct ApplicationLauncher {
 impl ApplicationLauncher {
     pub fn new() -> Self {
         // Basically copied from https://crates.io/crates/freedesktop-desktop-entry
-        let mut select_entries: Vec<(String, Box<dyn Fn() -> Result<(), String>>)> = vec![];
-        // We want to use a different default_paths so that we iter through the
-        // local directories last (the libraries goes through the local directories) first,
-        // so we change the order of default_paths from what you see here:
-        // https://codeberg.org/mmstick/freedesktop-desktop-entry/src/branch/main/src/lib.rs (
-        // although I basically just copied the function).
-        //
+        let mut select_entries: HashMap<String, Box<dyn Fn() -> Result<(), String>>> =
+            HashMap::new();
         // We want to iter through the local dirs last so they overwrite/override the system .desktop
-        // for users that want to overwrite the system .desktop entries.
+        // for users that want to overwrite the system .desktop entries. Using a HashMap helps us do this.
+        // The library already iters through the local directories first, so we are fine. Otherwise, we'd have to
+        // define our own custom list of directories to iter through.
+        //
+        // TODO handle this so that if they don't have a home directory, only use the system directories (the library
+        // panics if that happens).
+        //
+        // The Exec line of a .desktop entry has a few "field codes" that we aren't going to use (
+        // I think they're used for adding command line arguments for files/whatnot). You can see more
+        // details here (https://specifications.freedesktop.org/desktop-entry-spec/latest/ar01s07.html),
+        // but basically this regex pattern will take all those field codes that start with percent
+        // and a letter and replace them.
+        //
+        // We create the regex struct here so that we don't do it every time in the loop; that would
+        // be more inefficient.
+        let fieldcode_replace_regex = Regex::new("%(f|F|u|U|d|D|n|N|i|k|v|m)").expect(
+            "Programmer error in creating regex object to clean Exec line of desktop entry.",
+        );
 
-        // TODO handle this so that if they don't have a home directory, only use the system directories
-        let home_dir = home_dir().expect("You do not have a home directory");
-        let desktop_dirs_iter_order = vec![
-            (
-                PathSource::SystemSnap,
-                PathBuf::from("/var/lib/snapd/desktop/applications"),
-            ),
-            (
-                PathSource::SystemFlatpak,
-                PathBuf::from("/var/lib/flatpak/exports/share/applications"),
-            ),
-            (PathSource::System, PathBuf::from("/usr/share/applications")),
-            (PathSource::LocalDesktop, home_dir.join("Desktop")),
-            (
-                PathSource::LocalFlatpak,
-                home_dir.join(".local/share/flatpak/exports/share/applications"),
-            ),
-            (
-                PathSource::Local,
-                home_dir.join(".local/share/applications"),
-            ),
-        ];
-        for (_, path) in Iter::new(desktop_dirs_iter_order) {
+        for (_, path) in Iter::new(default_paths()) {
             debug!("path {:#?}", path);
 
             if let Ok(bytes) = std::fs::read_to_string(&path) {
@@ -70,14 +64,43 @@ impl ApplicationLauncher {
                         entry.appid
                     };
 
-                    select_entries.push((display_name.to_string(), Box::new(|| Ok(()))))
+                    // TODO This Exec string shouldn't be unwrapped
+                    // We replace the field codes in the Exec field as described above.
+                    let exec_string = entry.exec().unwrap().to_owned();
+                    let exec_string = fieldcode_replace_regex
+                        .replace(&exec_string, "")
+                        .into_owned();
+
+                    select_entries.insert(
+                        display_name.to_string(),
+                        Box::new(move || {
+                            debug!("exec is {:?}", exec_string);
+                            // We are going to call execvp(3) using the nix crate
+                            // to replace this process with the application the user
+                            // selected.
+
+                            let mut exec_string = exec_string.split_whitespace();
+                            Command::new(
+                                // If the expect/panic runs, that means the Exec is malformed (empty string?) We
+                                // probably *don't* want to panic on this (later), but I'm lazy.
+                                exec_string.next().expect(
+                                    ".desktop entry's Exec field is malformed (maybe blank)?",
+                                ),
+                            )
+                            .args(exec_string)
+                            .exec();
+
+                            // This will never happen
+                            panic!()
+                        }),
+                    );
                 }
             }
         }
 
         Self {
             search: Search::new(),
-            select: Select::new(select_entries),
+            select: Select::new(select_entries.into_iter().collect()),
         }
     }
 }

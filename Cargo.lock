@@ -1026,6 +1026,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "nix"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf1e25ee6b412c2a1e3fcb6a4499a5c1bfe7f43e014bdce9a6b6666e5aa2d187"
+dependencies = [
+ "bitflags",
+ "cc",
+ "cfg-if 1.0.0",
+ "libc",
+ "memoffset",
+]
+
+[[package]]
 name = "nom"
 version = "6.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1840,8 +1853,10 @@ dependencies = [
  "gfx_device_gl",
  "glutin",
  "log",
+ "nix 0.22.0",
  "piston_window",
  "pistoncore-glutin_window",
+ "regex",
  "winit",
 ]
 

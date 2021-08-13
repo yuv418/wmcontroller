@@ -10,6 +10,7 @@ pub struct Select {
     // These are the entries. The select box will
     // render these entry strings. When you press "Enter"
     // the callback function (closure) here will be called.
+    // TODO maybe we want to convert this to a HashMap.
     pub entries: Vec<(String, Box<dyn Fn() -> Result<(), String>>)>,
     // This field filters the entries using String::contains to only have
     // entries whose strings contiain this String. An empty entry_filter
