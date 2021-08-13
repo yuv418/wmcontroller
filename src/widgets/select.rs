@@ -76,8 +76,8 @@ impl Widget for Select {
                     // We match two keycodes to go up an entry: one is an up arrow key, as normal,
                     // and the other is Ctrl-P, which is how you go up a line in Emacs (or even
                     // Bash, but that's more "go up to the previous command").
-                    if (*key == Key::P && self.ctrl_pressed)
-                        || (*key == Key::Up) &&
+                    if ((*key == Key::P && self.ctrl_pressed)
+                        || *key == Key::Up) &&
                     // Obviously, we don't want to let the user go up
                     // beyond the first entry, so we have this condition.
                         self.selected_entry > 0
@@ -87,8 +87,8 @@ impl Widget for Select {
                     // We again do the same kind of keyboard-matching for the
                     // obvious down-arrow keypress. The Emacs/Bash equivalent is Ctrl-N, so
                     // we match that as well.
-                    else if (*key == Key::N && self.ctrl_pressed)
-                        || *key == Key::Up &&
+                    else if ((*key == Key::N && self.ctrl_pressed)
+                        || *key == Key::Down) &&
                     // Same thing here—don't let the user go past the
                     // last entry.
                         self.selected_entry != self.entries.len() - 1
