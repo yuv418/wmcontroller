@@ -13,10 +13,11 @@ use fontconfig::Fontconfig;
 
 use log::debug;
 
+mod application_launcher;
 mod configuration;
 mod widgets;
 
-use configuration::{BACKGROUND_COLOR, FONT_NAME, FOREGROUND_COLOR};
+use configuration::{BACKGROUND_COLOR, FONT_NAME};
 use widgets::{search, select, Widget};
 
 fn main() {
@@ -95,18 +96,7 @@ fn main() {
         .load_font(font.path)
         .unwrap();
 
-    let mut search = search::Search::new();
-    let mut select_entries: Vec<(String, Box<dyn Fn() -> Result<(), String>>)> = vec![];
-    for i in 0..22 {
-        select_entries.push((
-            format!("String {}, {}", i, if i % 2 == 0 { "even" } else { "odd" }),
-            Box::new(move || {
-                debug!("Callback received at index {}", i);
-                Ok(())
-            }),
-        ));
-    }
-    let mut select = select::Select::new(select_entries);
+    let mut application_launcher = application_launcher::ApplicationLauncher::new();
 
     // let mut events = Events::new(EventSettings::new().lazy(true));
 
@@ -114,34 +104,14 @@ fn main() {
         // Event things go here
         // We use press_args to store the key being pressed to pass it to the
         // search bar
-        search.handle_event(&ev);
-        select.handle_event(&ev);
 
-        if !search.buffer.is_empty() {
-            // Ew copy
-            select.update_entry_filter(Some(search.buffer.clone()));
-        } else {
-            select.update_entry_filter(None);
-        }
-
+        application_launcher.handle_event(&ev);
         if let Some(_args) = ev.render_args() {
-            window.draw_2d(&ev, |mut c, g, _device| {
+            window.draw_2d(&ev, |c, g, device| {
                 // TODO we want to make all these colors configurable,
                 // or at least global.
                 clear(BACKGROUND_COLOR, g);
-                text::Text::new_color(FOREGROUND_COLOR, 60)
-                    .draw(
-                        "Applications",
-                        &mut glyph_cache,
-                        &DrawState::default(),
-                        c.transform.trans(40.0, 100.0),
-                        g,
-                    )
-                    .unwrap();
-                search.draw([40.0, 140.0], &mut c, g, &mut glyph_cache);
-                select.draw([40.0, 200.0], &mut c, g, &mut glyph_cache);
-            });
-            window.draw_2d(&ev, |_, _, device| {
+                application_launcher.draw([40.0, 100.0], &c, g, &mut glyph_cache);
                 glyph_cache.factory.encoder.flush(device);
             });
         }

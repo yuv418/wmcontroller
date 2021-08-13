@@ -3,7 +3,7 @@
 use crate::configuration::{BACKGROUND_COLOR, FOREGROUND_COLOR};
 use crate::widgets::Widget;
 use gfx_device_gl::Resources;
-use log::{debug, warn};
+use log::warn;
 use piston_window::*;
 
 pub struct Select {
@@ -213,13 +213,6 @@ impl Widget for Select {
             .iter()
             .skip(start_entries)
             .take(MAX_ENTRIES as usize)
-            // .filter(|entry| {
-            //     if let Some(filter) = &self.entry_filter {
-            //         entry.0.contains(filter.as_str())
-            //     } else {
-            //         true
-            //     }
-            // })
             .enumerate()
         {
             // We get the entry from the index that's stored in the filtered_indices.
