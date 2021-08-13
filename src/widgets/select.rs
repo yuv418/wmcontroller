@@ -3,7 +3,7 @@
 use crate::configuration::{BACKGROUND_COLOR, FOREGROUND_COLOR};
 use crate::widgets::Widget;
 use gfx_device_gl::Resources;
-use log::{debug, warn};
+use log::warn;
 use piston_window::*;
 
 pub struct Select {
@@ -137,7 +137,7 @@ impl Widget for Select {
         // self.selected_entry value to figure out where to start.
         // That also means we don't have to iter through all of the entries
         // on each draw.
-        for (index, (entry, callback)) in self.entries.iter().enumerate() {
+        for (index, (entry, _)) in self.entries.iter().enumerate() {
             // We'll calculate the y-coordinates of the line since we'll use that to
             // calculate where to position text.
             let entry_line_ypos = coords[1] + (ENTRY_HEIGHT * ((index + 1) as f64));

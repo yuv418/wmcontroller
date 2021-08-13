@@ -11,7 +11,7 @@ use winit::{
 
 use fontconfig::Fontconfig;
 
-use log::{debug, error, info, trace, warn};
+use log::debug;
 
 mod configuration;
 mod widgets;
@@ -115,8 +115,8 @@ fn main() {
         // search bar
         search.handle_event(&ev);
         select.handle_event(&ev);
-        if let Some(args) = ev.render_args() {
-            window.draw_2d(&ev, |mut c, g, device| {
+        if let Some(_args) = ev.render_args() {
+            window.draw_2d(&ev, |mut c, g, _device| {
                 // TODO we want to make all these colors configurable,
                 // or at least global.
                 clear(BACKGROUND_COLOR, g);
@@ -132,7 +132,7 @@ fn main() {
                 search.draw([40.0, 140.0], &mut c, g, &mut glyph_cache);
                 select.draw([40.0, 200.0], &mut c, g, &mut glyph_cache);
             });
-            window.draw_2d(&ev, |c, g, device| {
+            window.draw_2d(&ev, |_, _, device| {
                 glyph_cache.factory.encoder.flush(device);
             });
         }
