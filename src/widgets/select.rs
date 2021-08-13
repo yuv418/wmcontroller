@@ -50,27 +50,6 @@ impl Widget for Select {
                         );
                     }
                 }
-                // Handle up/down arrow keys (and we'll also add ctrl-n and ctrl-p for
-                // Emacs-esque handling here). We can use these to change
-                // the entry that's currently selected.
-                Input::Button(ButtonArgs {
-                    button: Button::Keyboard(key),
-                    state: ButtonState::Press,
-                    ..
-                }) => match *key {
-                    // Obviously, we don't want to let the user go up
-                    // beyond the first entry!
-                    Key::Up if self.selected_entry > 0 => {
-                        self.selected_entry -= 1;
-                    }
-                    // Same thing here—don't let the user go past the
-                    // last entry.
-                    Key::Down if self.selected_entry != self.entries.len() - 1 => {
-                        self.selected_entry += 1;
-                    }
-                    _ => {}
-                },
-
                 // Okay, here, I'm not actually too keen on coyping this code
                 // to keep things dry. I suppose I might write some kind of
                 // universal control handler in the future.
@@ -86,6 +65,38 @@ impl Widget for Select {
                         self.ctrl_pressed = false;
                     }
                 },
+                // Handle up/down arrow keys (and we'll also add ctrl-n and ctrl-p for
+                // Emacs-esque handling here). We can use these to change
+                // the entry that's currently selected.
+                Input::Button(ButtonArgs {
+                    button: Button::Keyboard(key),
+                    state: ButtonState::Press,
+                    ..
+                }) => {
+                    // We match two keycodes to go up an entry: one is an up arrow key, as normal,
+                    // and the other is Ctrl-P, which is how you go up a line in Emacs (or even
+                    // Bash, but that's more "go up to the previous command").
+                    if (*key == Key::P && self.ctrl_pressed)
+                        || (*key == Key::Up) &&
+                    // Obviously, we don't want to let the user go up
+                    // beyond the first entry, so we have this condition.
+                        self.selected_entry > 0
+                    {
+                        self.selected_entry -= 1;
+                    }
+                    // We again do the same kind of keyboard-matching for the
+                    // obvious down-arrow keypress. The Emacs/Bash equivalent is Ctrl-N, so
+                    // we match that as well.
+                    else if (*key == Key::N && self.ctrl_pressed)
+                        || *key == Key::Up &&
+                    // Same thing here—don't let the user go past the
+                    // last entry.
+                        self.selected_entry != self.entries.len() - 1
+                    {
+                        self.selected_entry += 1;
+                    }
+                }
+
                 _ => {}
             }
         }
