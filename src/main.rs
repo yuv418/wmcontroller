@@ -96,16 +96,17 @@ fn main() {
         .unwrap();
 
     let mut search = search::Search::new();
-    let mut select = select::Select::new();
-    for i in 0..7 {
-        select.entries.push((
-            format!("String {}", i),
+    let mut select_entries: Vec<(String, Box<dyn Fn() -> Result<(), String>>)> = vec![];
+    for i in 0..22 {
+        select_entries.push((
+            format!("String {}, {}", i, if i % 2 == 0 { "even" } else { "odd" }),
             Box::new(move || {
                 debug!("Callback received at index {}", i);
                 Ok(())
             }),
         ));
     }
+    let mut select = select::Select::new(select_entries);
 
     // let mut events = Events::new(EventSettings::new().lazy(true));
 
@@ -115,6 +116,14 @@ fn main() {
         // search bar
         search.handle_event(&ev);
         select.handle_event(&ev);
+
+        if !search.buffer.is_empty() {
+            // Ew copy
+            select.update_entry_filter(Some(search.buffer.clone()));
+        } else {
+            select.update_entry_filter(None);
+        }
+
         if let Some(_args) = ev.render_args() {
             window.draw_2d(&ev, |mut c, g, _device| {
                 // TODO we want to make all these colors configurable,

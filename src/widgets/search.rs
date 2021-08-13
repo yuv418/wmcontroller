@@ -156,6 +156,12 @@ impl Widget for Search {
                             )
                         } else {
                             remove_last_iter_to_str(self.buffer.chars())
+                        };
+
+                        // We're going to reset the search bar if the string
+                        // becomes blank again through backspacing
+                        if self.buffer.is_empty() {
+                            self.events_run = false;
                         }
                     }
                 }
