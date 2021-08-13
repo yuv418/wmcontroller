@@ -14,7 +14,7 @@ use fontconfig::Fontconfig;
 use log::{debug, error, info, trace, warn};
 
 mod widgets;
-use widgets::search;
+use widgets::{search, select, Widget};
 
 fn main() {
     const WIDTH: u32 = 800;
@@ -95,6 +95,16 @@ fn main() {
         .unwrap();
 
     let mut search = search::Search::new();
+    let mut select = select::Select::new();
+    for i in 0..7 {
+        select.entries.push((
+            format!("String {}", i),
+            Box::new(move || {
+                debug!("Callback received at index {}", i);
+                Ok(())
+            }),
+        ));
+    }
 
     // let mut events = Events::new(EventSettings::new().lazy(true));
 
@@ -103,8 +113,11 @@ fn main() {
         // We use press_args to store the key being pressed to pass it to the
         // search bar
         search.handle_event(&ev);
+        select.handle_event(&ev);
         if let Some(args) = ev.render_args() {
             window.draw_2d(&ev, |mut c, g, device| {
+                // TODO we want to make all these colors configurable,
+                // or at least global.
                 clear([0.0, 72.0 / 255.0, 71.0 / 255.0, 1.0], g);
                 text::Text::new_color([1.0, 1.0, 1.0, 1.0], 60)
                     .draw(
@@ -116,6 +129,7 @@ fn main() {
                     )
                     .unwrap();
                 search.draw([40.0, 140.0], &mut c, g, &mut glyph_cache);
+                select.draw([40.0, 200.0], &mut c, g, &mut glyph_cache);
             });
             window.draw_2d(&ev, |c, g, device| {
                 glyph_cache.factory.encoder.flush(device);

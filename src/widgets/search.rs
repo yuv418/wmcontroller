@@ -3,6 +3,7 @@
 use core::iter::FromIterator;
 use piston_window::*;
 
+use crate::widgets::Widget;
 use log::debug;
 
 pub struct Search {
@@ -14,7 +15,6 @@ pub struct Search {
     events_run: bool,
     ctrl_pressed: bool,
 }
-
 impl Search {
     pub fn new() -> Self {
         Search {
@@ -24,9 +24,10 @@ impl Search {
             ctrl_pressed: false,
         }
     }
-
+}
+impl Widget for Search {
     // Function to draw the search bar on the screen
-    pub fn draw<G>(&self, coords: [f64; 2], c: &Context, g: &mut G, glyph_cache: &mut Glyphs)
+    fn draw<G>(&self, coords: [f64; 2], c: &Context, g: &mut G, glyph_cache: &mut Glyphs)
     where
         G: Graphics<Texture = Texture<gfx_device_gl::Resources>>,
     {
@@ -109,7 +110,7 @@ impl Search {
         }
     }
 
-    pub fn handle_event(&mut self, ev: &Event) {
+    fn handle_event(&mut self, ev: &Event) {
         // We can get a string from the input very easily—no need to handle shift
         // and all those messy thiings
         if let Event::Input(inp, _) = ev {
