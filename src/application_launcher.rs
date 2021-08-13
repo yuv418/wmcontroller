@@ -91,7 +91,7 @@ impl ApplicationLauncher {
                             .exec();
 
                             // This will never happen
-                            panic!()
+                            Ok(())
                         }),
                     );
                 }
