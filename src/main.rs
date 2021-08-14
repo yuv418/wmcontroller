@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: Zlib */
 
+use core::time::Duration;
 use glutin::dpi::{PhysicalPosition, Position};
 use glutin_window::GlutinWindow;
 use piston_window::*;
@@ -43,7 +44,7 @@ fn main() {
     let gw: GlutinWindow =
         GlutinWindow::from_raw(&window_settings, eventloop, window_builder).unwrap();
 
-    // Center the window
+    // Center the window and grab keys
 
     {
         // The thought was putting this in a separate scope might save a hair of memory
@@ -54,14 +55,20 @@ fn main() {
         let window_ref = gw.ctx.window();
         unsafe {
             let xconn = window_ref.xlib_xconnection().unwrap();
-            ((*xconn).xlib.XGrabKeyboard)(
+            while ((*xconn).xlib.XGrabKeyboard)(
                 window_ref.xlib_display().unwrap() as *mut x11::ffi::_XDisplay,
                 window_ref.xlib_window().unwrap(),
                 x11::ffi::True,
                 x11::ffi::GrabModeAsync,
                 x11::ffi::GrabModeAsync,
                 x11::ffi::CurrentTime,
-            );
+            ) != 0
+            {
+                // When you start the program from the window manager directly,
+                // XGrabKeyboard fails. So you have to sleep, and do it again.
+                std::thread::sleep(Duration::from_millis(100));
+            }
+            println!("{:#?}", xconn.display as *mut x11::ffi::_XDisplay);
         }
 
         if let Some(monitor) = window_ref.current_monitor() {
@@ -71,9 +78,12 @@ fn main() {
             debug!("Size of window is {:?}", window_size);
 
             window_ref.set_outer_position(Position::Physical(PhysicalPosition {
-                x: (screen_size.width / 2 - window_size.width / 2) as i32,
-                y: (screen_size.height / 2 - window_size.height / 2) as i32,
+                x: monitor.position().x + (screen_size.width / 2 - window_size.width / 2) as i32,
+                y: monitor.position().y + (screen_size.height / 2 - window_size.height / 2) as i32,
             }));
+        }
+        for monitor in window_ref.available_monitors() {
+            debug!("Monitor is {:#?}", monitor);
         }
     }
 

@@ -66,6 +66,11 @@ impl ApplicationLauncher {
 
                     // TODO This Exec string shouldn't be unwrapped
                     // We replace the field codes in the Exec field as described above.
+
+                    if entry.exec().is_none() {
+                        continue;
+                    }
+
                     let exec_string = entry.exec().unwrap().to_owned();
                     let exec_string = fieldcode_replace_regex
                         .replace(&exec_string, "")
@@ -90,7 +95,7 @@ impl ApplicationLauncher {
                             .args(exec_string)
                             .exec();
 
-                            // This will never happen
+                            // This will never happen… okay, maybe it will. Haha. That's why we can't panic!() here.
                             Ok(())
                         }),
                     );
