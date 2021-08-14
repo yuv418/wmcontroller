@@ -69,7 +69,13 @@ impl Select {
                     // We're checking if the string we search for is within any of the entries' strings.
                     // It's quite basic, but for a simple application launcher, this is probably all we'll
                     // need.
-                    if entry.contains(filter.as_str()) {
+                    //
+                    // We also make the entry lowercase because case sensitivity will just
+                    // make things more difficult for the user.
+                    if entry
+                        .to_lowercase()
+                        .contains(filter.to_lowercase().as_str())
+                    {
                         self.filtered_entry_indices.push(i);
                     }
                 }

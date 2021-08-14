@@ -4,7 +4,6 @@ use freedesktop_desktop_entry::{default_paths, DesktopEntry, Iter, PathSource};
 use log::debug;
 use piston_window::*;
 use regex::Regex;
-use std::ffi::CString;
 use std::os::unix::process::CommandExt;
 use std::process::Command;
 use std::{collections::HashMap, iter::IntoIterator, path::PathBuf};
@@ -64,13 +63,14 @@ impl ApplicationLauncher {
                         entry.appid
                     };
 
-                    // TODO This Exec string shouldn't be unwrapped
-                    // We replace the field codes in the Exec field as described above.
-
+                    // If the .desktop file doesn't have an Exec field, we
+                    // can't launch it. We skip it.
                     if entry.exec().is_none() {
                         continue;
                     }
 
+                    // We replace the field codes in the Exec field as described above.
+                    // TODO handle Exec fields with quotes in them.
                     let exec_string = entry.exec().unwrap().to_owned();
                     let exec_string = fieldcode_replace_regex
                         .replace(&exec_string, "")

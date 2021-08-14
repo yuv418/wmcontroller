@@ -66,9 +66,8 @@ fn main() {
             {
                 // When you start the program from the window manager directly,
                 // XGrabKeyboard fails. So you have to sleep, and do it again.
-                std::thread::sleep(Duration::from_millis(100));
+                std::thread::sleep(Duration::from_millis(10));
             }
-            println!("{:#?}", xconn.display as *mut x11::ffi::_XDisplay);
         }
 
         if let Some(monitor) = window_ref.current_monitor() {
@@ -78,12 +77,12 @@ fn main() {
             debug!("Size of window is {:?}", window_size);
 
             window_ref.set_outer_position(Position::Physical(PhysicalPosition {
+                // The window will be centered on the wrong monitor
+                // if we don't move x and y by the monitor's position
+                // as an offset.
                 x: monitor.position().x + (screen_size.width / 2 - window_size.width / 2) as i32,
                 y: monitor.position().y + (screen_size.height / 2 - window_size.height / 2) as i32,
             }));
-        }
-        for monitor in window_ref.available_monitors() {
-            debug!("Monitor is {:#?}", monitor);
         }
     }
 
