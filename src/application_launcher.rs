@@ -84,7 +84,16 @@ impl ApplicationLauncher {
                             // to replace this process with the application the user
                             // selected.
 
-                            let mut exec_string = exec_string.split_whitespace();
+                            let mut exec_string = exec_string
+                                .split_whitespace()
+                                // TODO maybe don't escape unless the argument is surrounded in quotes? Anyway,
+                                // I'm too lazy to write my own unescape function, so we're using one from a library.
+                                .map(|arg| {
+                                    snailquote::unescape(arg).expect(
+                                        "Malformed desktop entry, failed to escape Exec argument",
+                                    )
+                                });
+
                             Command::new(
                                 // If the expect/panic runs, that means the Exec is malformed (empty string?) We
                                 // probably *don't* want to panic on this (later), but I'm lazy.
