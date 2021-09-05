@@ -291,13 +291,15 @@ impl Widget for Select {
                 } else {
                     FOREGROUND_COLOR
                 },
-                LISTING_FONTSIZE as u32,
+                LISTING_FONTSIZE as u32 * 2,
             )
             .draw(
                 &entry,
                 glyph_cache,
                 &DrawState::default(),
-                c.transform.trans(entry_text_xpos, entry_text_ypos),
+                c.transform
+                    .trans(entry_text_xpos, entry_text_ypos)
+                    .zoom(0.5),
                 g,
             )
             .unwrap();

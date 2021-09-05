@@ -72,12 +72,12 @@ impl Widget for Search {
         // The point we need is actually the bottom left of the text, so what we can do is
         let text_ypos = coords[1] + (RECT_HEIGHT / 2.0) + (char_height / 2.0);
 
-        text::Text::new_color(FOREGROUND_COLOR, SEARCH_FONTSIZE as u32)
+        text::Text::new_color(FOREGROUND_COLOR, SEARCH_FONTSIZE as u32 * 2)
             .draw(
                 render_text,
                 glyph_cache,
                 &DrawState::default(),
-                c.transform.trans(text_xpos, text_ypos),
+                c.transform.trans(text_xpos, text_ypos).zoom(0.5),
                 g,
             )
             .unwrap();

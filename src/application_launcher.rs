@@ -1,12 +1,11 @@
 use crate::{configuration::FOREGROUND_COLOR, search::Search, select::Select, widgets::Widget};
-use dirs::home_dir;
-use freedesktop_desktop_entry::{default_paths, DesktopEntry, Iter, PathSource};
+use freedesktop_desktop_entry::{default_paths, DesktopEntry, Iter};
 use log::debug;
 use piston_window::*;
 use regex::Regex;
 use std::os::unix::process::CommandExt;
 use std::process::Command;
-use std::{collections::HashMap, iter::IntoIterator, path::PathBuf};
+use std::{collections::HashMap, iter::IntoIterator};
 
 pub struct ApplicationLauncher {
     search: Search,
@@ -126,12 +125,12 @@ impl Widget for ApplicationLauncher {
     where
         G: Graphics<Texture = Texture<gfx_device_gl::Resources>>,
     {
-        text::Text::new_color(FOREGROUND_COLOR, 60)
+        text::Text::new_color(FOREGROUND_COLOR, 120)
             .draw(
                 "Applications",
                 glyph_cache,
                 &DrawState::default(),
-                c.transform.trans(coords[0], coords[1]),
+                c.transform.trans(coords[0], coords[1]).zoom(0.5),
                 g,
             )
             .unwrap();
