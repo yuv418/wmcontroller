@@ -18,6 +18,6 @@ build() {
 package() {
         cd "${pkgname}-master"
         mkdir -p $pkgdir/usr/bin/
-        cp target/release/wmcontroller $pkgdir/usr/bin/wmc
+        cp target/release/wmcontroller $pkgdir/usr/bin/wmcontroller
         install -D LICENSE.org "$pkgdir/usr/share/licenses/$pkgname/LICENSE.org"
 }

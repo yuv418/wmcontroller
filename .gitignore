@@ -1,4 +1,6 @@
 /target
+*.tar.gz
+*.tar.gz.zst
 
 
 # Added by cargo
